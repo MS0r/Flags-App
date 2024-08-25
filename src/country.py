@@ -39,8 +39,8 @@ class Countries(database.Database):
                 ifstarts.add(name)
                 continue
 
-            m = len(srch) + 1
-            n = len(contry) + 1
+            m = len(srch)
+            n = len(contry)
             zero = [0 for _ in range(m)]
             matrix = [[j for j in range(m)] if i == 0 else zero.copy() for i in range(n)]
             for i in range(n):
@@ -48,14 +48,14 @@ class Countries(database.Database):
 
             for i in range(1,n):
                 for j in range(1,m):
-                    cost = 0 if contry[i-1] == srch[j-1] else 1
+                    cost = 0 if contry[i] == srch[j] else 1
                     matrix[i][j] = min(
                         matrix[i-1][j] + 1, #deletion
                         matrix[i][j-1] + 1, #Insertion
                         matrix[i-1][j-1] + cost #Substitution
                     )
 
-                    if i > 1 and j > 1 and contry[i-1] == srch[j-1] and contry[i-2] == srch[j-2]: #Transpositions
+                    if i > 1 and j > 1 and contry[i] == srch[j-1] and contry[i-1] == srch[j]: #Transpositions
                         matrix[i][j] = min(matrix[i][j], matrix[i-2][j-2] + cost)
 
             distance = matrix[n-1][m-1]
@@ -64,6 +64,7 @@ class Countries(database.Database):
                 costs[distance] = [name]
             else:
                 costs[distance].append(name)
+                
         minimum = min(list(costs.keys()))
         return set(costs[minimum]).union(ifstarts)
     

@@ -1,8 +1,5 @@
 import warnings
-import logging
 from . import json_data
-
-logger = logging.getLogger("database")
 
 class Data:
     def __init__(self,**fields):
@@ -73,7 +70,7 @@ class Database:
                 #print(self.indices)
                 value = value.lower()
                 if value in index:
-                    logger.debug(
+                    print(
                         "%s %r already taken in index %r and will be "
                         "ignored. This is an error in the databases."
                         % (self.factory.__name__, value, key)
