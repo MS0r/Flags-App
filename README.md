@@ -14,4 +14,4 @@ python __main__.py
 
 It will take almost 2 minutes to charge all images and the information from each country found on the ISO
 
-The database classes and the countries classes are based on the python library [pycountry] (https://github.com/pycountry/pycountry).
+The database classes and the countries classes are based on the python library [pycountry](https://github.com/pycountry/pycountry).
