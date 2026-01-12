@@ -1,5 +1,5 @@
 import warnings
-from . import json_data
+from src.handlers import json
 
 class Data:
     def __init__(self,**fields):
@@ -27,6 +27,10 @@ class Data:
         # allow casting into a dict
         for field in self._fields:
             yield field, getattr(self, field)
+
+    @property.getter
+    def fields(self):
+        return self._fields
 
 class Country(Data):
 
@@ -58,11 +62,11 @@ class Database:
         
         self._clear()
 
-        tree = json_data.init_json_flags(self.filename)
+        tree = json.init_json_flags(self.filename)
 
         for entry in tree:
-            obj = self.factory(name=entry,**tree[entry])
-            dictionary = {'name' : entry,**tree[entry]}
+            obj : Data = self.factory(name=entry,**tree[entry])
+            dictionary = obj.fields
             self.objects.append(obj)
             for key,value in dictionary.items():
                 index = self.indices.setdefault(key, {})

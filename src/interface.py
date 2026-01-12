@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from src.country import Countries
+from src.database.country import Countries
 
 class App(tk.Frame):
     

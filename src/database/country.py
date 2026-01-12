@@ -1,7 +1,7 @@
 from . import database
 import unicodedata
 import os
-from . import json_data
+from src.handlers import json
 from collections.abc import Set
 
 cwd = os.getcwd()
@@ -69,7 +69,7 @@ class Countries(database.Database):
         return set(costs[minimum]).union(ifstarts)
     
     def put_to_used(self,name : str):
-        data = json_data.load_json(self.filename)
+        data = json.load_json(self.filename)
         data[name]['used'] = "True"
-        json_data.save_json(self.filename,data)
+        json.save_json(self.filename,data)
         self.get(name=name).used = "True"
