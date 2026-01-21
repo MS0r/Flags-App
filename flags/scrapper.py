@@ -18,7 +18,7 @@ class Scrapper:
         self.HEADERS = headers
         self.countries = {}
 
-    async def make_directory(self, path : str):
+    def make_directory(self, path : str):
         if not os.path.exists(path):
             os.mkdir(path)
 
@@ -34,7 +34,7 @@ class Scrapper:
                 LOG.debug(f"Added flag for {name}")
 
     async def _get_flags(self,session : ClientSession):
-        await self.make_directory(FLAGS_PATH)
+        self.make_directory(FLAGS_PATH)
         
         for name, args in self.countries.items():
             await self._get_flag(name,args,session)
