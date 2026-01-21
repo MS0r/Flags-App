@@ -2,6 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from flags.interface import App
 from flags.paths import JSON_PATH
+from flags import loggers
+from flags.loggers import setup_logging
+
+LOG = setup_logging(__name__)
 
 def main():
     window = tk.Tk()

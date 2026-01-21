@@ -1,27 +1,32 @@
+import os
 import json
 import asyncio
-from src.scrapper.get_data import Scrapper
-from src.urls import (WIKIURL, HEADERS, POPULATION_URL)
+from flags.scrapper import Scrapper
+from flags.req_conf import (WIKIURL, HEADERS, POPULATION_URL)
+
+scrapper = Scrapper(WIKIURL,POPULATION_URL,HEADERS)
+
+#Change to sqlite ------
 
 def init_json_flags(filename):
-    scrapper = Scrapper(WIKIURL,HEADERS,POPULATION_URL)
-    try:
+    if os.path.exists(filename):
         with open(filename, encoding="utf-8") as f:
             return json.load(f)
-    except:
+    else:
         data = asyncio.run(scrapper.get_flags())
         save_json(filename,data)
         return data
 
     
 def load_json(path):
-    scrapper = Scrapper(WIKIURL,HEADERS,POPULATION_URL)
-    try:
+    if os.path.exists(path):
         with open(path,'r') as f:
             return json.load(f)
-    except Exception:
+    else:
         return asyncio.run(scrapper.get_flags())
-
+        
 def save_json(path:str,data):
     with open(path,'w') as f:
         json.dump(data,f,indent=1)
+
+#Change to sqlite ------

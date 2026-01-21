@@ -1,5 +1,5 @@
 [project]
-name = "workspace-flags"
+name = "flags"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -19,3 +19,7 @@ dependencies = [
     "soupsieve==2.5",
     "urllib3==2.2.1",
 ]
+
+[tool.uv.build-backend]
+module-name = "flags"
+module-root = ""

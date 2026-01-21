@@ -1,5 +1,8 @@
-import warnings
-from src.handlers import json
+from typing import Dict, List
+from flags.handlers import json
+from flags.loggers import setup_logging
+
+LOG = setup_logging(__name__)
 
 class Data:
     def __init__(self,**fields):
@@ -28,22 +31,8 @@ class Data:
         for field in self._fields:
             yield field, getattr(self, field)
 
-    @property.getter
     def fields(self):
         return self._fields
-
-class Country(Data):
-
-    def __getattr__(self, key : str):
-        if key in self._fields:
-            return self._fields[key]
-
-        name = self._fields.get('name')
-        if name is not None:
-            warning_message = (f'Country {key} not found, Country name provided instead')
-            warnings.warn(warning_message,UserWarning)
-            return name
-        raise AttributeError()
 
 class Database:
     def __init__(self,filename : str):
@@ -55,40 +44,39 @@ class Database:
             self.factory = self.data_class
 
     def _clear(self):
-        self.objects = []
-        self.indices = {}
+        self.objects : List[Data] = []
+        self.indices : Dict[str,Dict[str,Data]] = {}
 
     def _load(self):
         
         self._clear()
-
-        tree = json.init_json_flags(self.filename)
+        tree = getattr(self,'tree')
+        if tree is None:
+            raise NotImplementedError("self.tree not initialized")
 
         for entry in tree:
-            obj : Data = self.factory(name=entry,**tree[entry])
-            dictionary = obj.fields
+            obj : Data = self.factory(**entry)
+            dictionary = obj.fields()
             self.objects.append(obj)
             for key,value in dictionary.items():
                 index = self.indices.setdefault(key, {})
-                #print(index,value)
-                #print(self.indices)
-                value = value.lower()
+                value = value
                 if value in index:
-                    print(
+                    LOG.warning(
                         "%s %r already taken in index %r and will be "
                         "ignored. This is an error in the databases."
                         % (self.factory.__name__, value, key)
                     )
                 index[value] = obj
     
-    def get(self, *, default = None, **kw) -> Country:
+    def get(self, *, default = None, **kw) -> Data:
         if len(kw) != 1:
             raise TypeError("Only one criteria may be given")
         field, value = kw.popitem()
         if not isinstance(value, str):
             raise LookupError()
-        # Normalize for case-insensitivity
-        value = value.lower()
+        
+        value = value
         index = self.indices[field]
         try:
             return index[value]

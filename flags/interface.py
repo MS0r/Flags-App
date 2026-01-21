@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
-from src.database.country import Countries
+from flags.database.country import Countries
 
 class App(tk.Frame):
     
@@ -98,5 +98,5 @@ class App(tk.Frame):
             path = country.img
             with Image.open(path) as img_flag:
                 self.images[name] = ImageTk.PhotoImage(img_flag.resize((50,25)))
-            self.table.insert('',index=tk.END,image=self.images[name],values=(name.title(),country.used,country.population))
+            self.table.insert('',index=tk.END,image=self.images[name],values=(name.title(),country.used,country.pop))
             self.current_items.add(name)
