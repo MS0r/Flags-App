@@ -1,5 +1,5 @@
+from flags.handlers.sql import SQLiteTable
 from typing import Dict, List
-from flags.handlers import json
 from flags.loggers import setup_logging
 
 LOG = setup_logging(__name__)
@@ -30,55 +30,42 @@ class Data:
         # allow casting into a dict
         for field in self._fields:
             yield field, getattr(self, field)
-
+        
     def fields(self):
         return self._fields
 
-class Database:
+class Table:
     def __init__(self,filename : str):
-        self.filename = filename
-
+        self.sql = SQLiteTable(filename,self.__class__.__name__)
+        
         if isinstance(self.data_class,str):
             self.factory = type(self.data_class,(Data,),{})
         else:
             self.factory = self.data_class
 
+    #remove
     def _clear(self):
         self.objects : List[Data] = []
         self.indices : Dict[str,Dict[str,Data]] = {}
-
-    def _load(self):
         
+    def _load(self):
         self._clear()
+
         tree = getattr(self,'tree')
         if tree is None:
-            raise NotImplementedError("self.tree not initialized")
+            raise NotImplementedError("self.tree not initialized")  
+         
+        keys = tree[0].keys()
 
-        for entry in tree:
-            obj : Data = self.factory(**entry)
-            dictionary = obj.fields()
-            self.objects.append(obj)
-            for key,value in dictionary.items():
-                index = self.indices.setdefault(key, {})
-                value = value
-                if value in index:
-                    LOG.warning(
-                        "%s %r already taken in index %r and will be "
-                        "ignored. This is an error in the databases."
-                        % (self.factory.__name__, value, key)
-                    )
-                index[value] = obj
+        self.sql.create_table(keys)
+        self.sql.insert_many(keys,tree)
     
-    def get(self, *, default = None, **kw) -> Data:
+    def get(self, *_, **kw) -> Data:
         if len(kw) != 1:
             raise TypeError("Only one criteria may be given")
         field, value = kw.popitem()
         if not isinstance(value, str):
             raise LookupError()
         
-        value = value
-        index = self.indices[field]
-        try:
-            return index[value]
-        except KeyError:
-            return default
+        res = self.sql.select_one_where(field,value)
+        return self.factory(**res)

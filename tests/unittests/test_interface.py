@@ -6,7 +6,7 @@ import flags.interface as interface_mod
 
 class FakeCountry:
 	def __init__(self, name):
-		self.img = f"/tmp/{name}.png"
+		self.img_path = f"/tmp/{name}.png"
 		self.used = "False"
 		self.pop = "123"
 

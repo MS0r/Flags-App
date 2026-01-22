@@ -5,12 +5,12 @@ from flags.database.country import Countries
 
 class App(tk.Frame):
     
-    def __init__(self,master : tk.Tk ,heig : int,wid : int,json_path : str):
+    def __init__(self,master : tk.Tk ,heig : int,wid : int,flags_db : str):
         super().__init__(master,height=heig,width=wid)
         self.pack()
         self.search = self.entry_frame()
         self.table = self.tree_frame()
-        self.countries = Countries(json_path)
+        self.countries = Countries(flags_db)
         self.images = {}
         self.current_items = set()
         self.put_all_items()
@@ -56,21 +56,21 @@ class App(tk.Frame):
         return table
     
     def search_function(self,*args):
-        search = self.search.get()
+        search = self.search.get().strip().lower()
         results = self.countries.fuzzy_search(search)
 
         to_delete = self.current_items.difference(results)
         to_add = results.difference(self.current_items)
-        self.current_items = results
+        self.current_items = set(results)
 
         aux = {self.table.set(child,'flags').lower():child for child in self.table.get_children()}
-        indexes_to_delete = [aux[name] for name in to_delete]
+        indexes_to_delete = [aux[name] for name in to_delete if name in aux]
         
         for idx in indexes_to_delete:
             self.table.delete(idx)
         for name in to_add:
             country = self.countries.get(name=name)
-            self.table.insert('',0,image=self.images[name],values=(name.title(),country.used,country.population))
+            self.table.insert('',0,image=self.images[name],values=(name.title(),country.used,country.pop))
         self.sort_heading('flags',False)
        
     def sort_heading(self,col : str,reverse : bool):
@@ -83,20 +83,36 @@ class App(tk.Frame):
         self.table.heading(col,command=lambda:self.sort_heading(col,not reverse))
 
     def put_to_used(self):
-        index = self.table.selection()[0]
+        sel = self.table.selection()
+        if not sel:
+            return
+        index = sel[0]
         name = self.table.item(index)['values'][0]
-        
         self.countries.put_to_used(name)
         self.table.delete(index)
-        self.current_items.remove(name.lower())
+        self.current_items.discard(name.lower())
         self.search_function()
         
     def put_all_items(self):
         flags_names = self.countries.get_names()
         for name in flags_names:
             country = self.countries.get(name=name)
-            path = country.img
-            with Image.open(path) as img_flag:
-                self.images[name] = ImageTk.PhotoImage(img_flag.resize((50,25)))
-            self.table.insert('',index=tk.END,image=self.images[name],values=(name.title(),country.used,country.pop))
-            self.current_items.add(name)
+            path = country.img_path
+            img_obj = None
+            if path:
+                try:
+                    with Image.open(path) as img_flag:
+                        img_flag = img_flag.copy()
+                        img_flag.thumbnail((50, 50))
+                        img_obj = ImageTk.PhotoImage(img_flag)
+                except Exception:
+                    img_obj = None
+            if img_obj is None:
+                # simple blank placeholder
+                img_flag = Image.new('RGBA', (50, 50), (240,240,240,255))
+                img_obj = ImageTk.PhotoImage(img_flag)
+            self.images[name] = img_obj
+            used = country.used
+            pop = country.pop
+            self.table.insert('',index=tk.END,image=img_obj,values=(name.title(), used, pop))
+            self.current_items.add(name.lower())

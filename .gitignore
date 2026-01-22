@@ -1,3 +1,5 @@
-*.json
-flags_images
+flags_images/
+.vscode/
+
+*.db
 *.pyc

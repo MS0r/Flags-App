@@ -1,9 +1,15 @@
 import unicodedata
+import asyncio
 
 from typing import Set
-from flags.database.db import (Database, Data)
-from flags.handlers import json
+
+from flags.scrapper import Scrapper
+from flags.database.db import (Table, Data)
 from flags.loggers import setup_logging
+from flags.paths import FLAGS_PATH
+from flags.req_conf import (WIKIURL, HEADERS, POPULATION_URL)
+
+scrapper = Scrapper(WIKIURL,POPULATION_URL,FLAGS_PATH,HEADERS)
 
 LOG = setup_logging(__name__)
 
@@ -17,7 +23,7 @@ def remove_accents(input_str : str):
 class Country(Data):
     def __getattr__(self, key : str):
         if key in self._fields:
-            return self._fields[key]
+            return self ._fields[key]
 
         name = self._fields.get('name')
         if name is not None:
@@ -26,7 +32,7 @@ class Country(Data):
             return name
         raise AttributeError()
 
-class Countries(Database):
+class Countries(Table):
 
     data_class = Country
 
@@ -35,14 +41,13 @@ class Countries(Database):
         self._load()
 
     def _load(self):
-        self.tree = []
-        jason = json.init_json_flags(self.filename)
-        for k, v in jason.items():
-            self.tree.append({'name' : k,**v})
-        super()._load()
+        tree = self.sql.select_all()
+        if len(tree) == 0:
+            self.tree = asyncio.run(scrapper.get_flags())
+            super()._load()
 
     def get_names(self):
-        return self.indices['name'].keys()
+        return list(map(lambda x: x['name'],self.sql.select_columns(('name',))))
 
     def fuzzy_search(self,search : str) -> Set[str]:
         srch = remove_accents(search).lower()
@@ -89,7 +94,8 @@ class Countries(Database):
         return set(costs[minimum]).union(ifstarts)
     
     def put_to_used(self,name : str):
-        data = json.load_json(self.filename)
-        data[name]['used'] = "True"
-        json.save_json(self.filename,data)
+        # update the underlying SQL row and the in-memory object
+        # SQLiteTable.update_where_name expects keyword assignments directly;
+        # pass the string value so the TEXT column is updated
+        self.sql.update_where_name(name, used='True')
         self.get(name=name).used = "True"

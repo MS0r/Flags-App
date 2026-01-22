@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 from flags.interface import App
-from flags.paths import JSON_PATH
+from flags.paths import JSON_PATH, SQLITE_PATH
+from flags.loggers import setup_logging
+
+LOG = setup_logging(__name__)
 
 def main():
     window = tk.Tk()
@@ -11,7 +14,7 @@ def main():
     style = ttk.Style()
     style.configure('Treeview',rowheight=35)
 
-    myapp = App(window,750,800,JSON_PATH)
+    myapp = App(window,750,800,SQLITE_PATH)
     myapp.mainloop()
 
 

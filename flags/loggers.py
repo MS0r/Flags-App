@@ -1,7 +1,5 @@
 import logging
 import sys
-from contextlib import suppress
-
 
 DEFAULT_LOG_FORMAT = "%(asctime)s - %(filename)s[%(levelname)s]: %(message)s"
 

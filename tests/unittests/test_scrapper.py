@@ -25,6 +25,9 @@ class DummyResponse:
     async def __aexit__(self, exc_type, exc, tb):
         return False
 
+    def raise_for_status(self):
+        return None
+
     async def text(self):
         return self._text
 
@@ -48,15 +51,20 @@ class DummyClientSession:
             return DummyResponse(text=SAMPLE_HTML)
         return DummyResponse(data=self.img_bytes)
 
+def write_fake_bytes(self):
+    os.makedirs(self, exist_ok=True)
+    with self.open(mode='wb') as f:
+        f.write(b'FAKEPNG')
 
-def fake_open(fil):
-    class FakeImage:
-        def save(self, path):
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, 'wb') as f:
-                f.write(b'FAKEPNG')
+def get_fake_running_loop():
+    class FakeLoop:
+        def __init__(self):
+            pass
 
-    return FakeImage()
+        async def run_in_executor(self,executor,func,*args):
+            func(*args)
+
+    return FakeLoop()
 
 
 def test_get_flags_creates_entries_and_saves(tmp_path, monkeypatch):
@@ -64,17 +72,18 @@ def test_get_flags_creates_entries_and_saves(tmp_path, monkeypatch):
 
     # Patch ClientSession, Image.open, and FLAGS_PATH used by the scrapper
     monkeypatch.setattr(scrapper_mod, "ClientSession", lambda: DummyClientSession(population_url))
-    monkeypatch.setattr(scrapper_mod.Image, "open", fake_open)
+    monkeypatch.setattr(scrapper_mod.asyncio, "get_running_loop", get_fake_running_loop)
+    monkeypatch.setattr(scrapper_mod.Path,"write_bytes",write_fake_bytes) 
     flags_path = tmp_path / "flags_dir"
-    monkeypatch.setattr(scrapper_mod, "FLAGS_PATH", str(flags_path))
 
-    s = Scrapper(wikiurl="http://unused", population_url=population_url, headers={})
+    s = Scrapper(wikiurl="http://unused", population_url=population_url,flags_path=str(flags_path),headers={})
     data = asyncio.run(s.get_flags())
 
-    assert all([c in data for c in SAMPLE_COUNTRIES])
-    td = data[SAMPLE_COUNTRIES[0]]
-    assert td["img"].endswith(".png")
-    assert td["img_url"].endswith(".svg.png")
-    assert td["used"] == "False"
+    names = list(map(lambda x: x['name'],data))
+    assert all([c in names for c in SAMPLE_COUNTRIES])
+    sample0 = data[0]
+    assert sample0["img_path"].endswith(".png")
+    assert sample0["origin_url"].endswith(".svg.png")
+    assert sample0["used"] == "False"
     # Fake save wrote the file
-    assert os.path.exists(td["img"]) is True
+    assert os.path.exists(sample0["img_path"])
