@@ -51,7 +51,7 @@ class DummyClientSession:
             return DummyResponse(text=SAMPLE_HTML)
         return DummyResponse(data=self.img_bytes)
 
-def write_fake_bytes(self):
+def write_fake_bytes(self,_):
     os.makedirs(self, exist_ok=True)
     with self.open(mode='wb') as f:
         f.write(b'FAKEPNG')
