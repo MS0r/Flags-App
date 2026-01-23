@@ -3,7 +3,6 @@ import pytest
 
 from flags.database import db as db_mod
 from flags.database import country as country_mod
-import asyncio
 
 
 def test_data_basic_behavior():

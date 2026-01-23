@@ -1,7 +1,6 @@
 import pytest
 
 import flags.database.country as country_mod
-import asyncio
 
 
 def test_remove_accents_basic():
