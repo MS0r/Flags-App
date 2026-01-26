@@ -56,21 +56,21 @@ class App(tk.Frame):
         return table
     
     def search_function(self,*args):
-        search = self.search.get().strip().lower()
+        search = self.search.get().strip()
         results = self.countries.fuzzy_search(search)
 
         to_delete = self.current_items.difference(results)
         to_add = results.difference(self.current_items)
         self.current_items = set(results)
 
-        aux = {self.table.set(child,'flags').lower():child for child in self.table.get_children()}
+        aux = {self.table.set(child,'flags'):child for child in self.table.get_children()}
         indexes_to_delete = [aux[name] for name in to_delete if name in aux]
         
         for idx in indexes_to_delete:
             self.table.delete(idx)
         for name in to_add:
             country = self.countries.get(name=name)
-            self.table.insert('',0,image=self.images[name],values=(name.title(),country.used,country.pop))
+            self.table.insert('',0,image=self.images[name],values=(name,country.used,country.pop))
         self.sort_heading('flags',False)
        
     def sort_heading(self,col : str,reverse : bool):
@@ -90,7 +90,7 @@ class App(tk.Frame):
         name = self.table.item(index)['values'][0]
         self.countries.put_to_used(name)
         self.table.delete(index)
-        self.current_items.discard(name.lower())
+        self.current_items.discard(name)
         self.search_function()
         
     def put_all_items(self):
@@ -108,11 +108,10 @@ class App(tk.Frame):
                 except Exception:
                     img_obj = None
             if img_obj is None:
-                # simple blank placeholder
                 img_flag = Image.new('RGBA', (50, 50), (240,240,240,255))
                 img_obj = ImageTk.PhotoImage(img_flag)
             self.images[name] = img_obj
             used = country.used
             pop = country.pop
-            self.table.insert('',index=tk.END,image=img_obj,values=(name.title(), used, pop))
-            self.current_items.add(name.lower())
+            self.table.insert('',index=tk.END,image=img_obj,values=(name, used, pop))
+            self.current_items.add(name)

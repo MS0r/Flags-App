@@ -94,8 +94,4 @@ class Countries(Table):
         return set(costs[minimum]).union(ifstarts)
     
     def put_to_used(self,name : str):
-        # update the underlying SQL row and the in-memory object
-        # SQLiteTable.update_where_name expects keyword assignments directly;
-        # pass the string value so the TEXT column is updated
         self.sql.update_where_name(name, used='True')
-        self.get(name=name).used = "True"

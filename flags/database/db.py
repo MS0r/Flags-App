@@ -42,14 +42,8 @@ class Table:
             self.factory = type(self.data_class,(Data,),{})
         else:
             self.factory = self.data_class
-
-    #remove
-    def _clear(self):
-        self.objects : List[Data] = []
-        self.indices : Dict[str,Dict[str,Data]] = {}
         
     def _load(self):
-        self._clear()
 
         tree = getattr(self,'tree')
         if tree is None:
